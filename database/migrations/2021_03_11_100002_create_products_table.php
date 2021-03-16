@@ -19,12 +19,12 @@ class CreateProductsTable extends Migration
             $table->string('modelo');
             $table->string('color');
             $table->string('numeracion');
-            $table->string('material');
-            $table->string('tipo');
-            $table->string('imagen');
-            $table->decimal('precio_publico', 9, 2);
-            $table->decimal('precio_proveedor', 9, 2);
-            $table->string('tipo_zapato');
+            $table->string('material')->nullable();
+            $table->string('tipo')->nullable();
+            $table->string('imagen')->nullable();
+            $table->decimal('precio_publico', 9, 2)->nullable();
+            $table->decimal('precio_proveedor', 9, 2)->nullable();
+            $table->string('tipo_zapato')->nullable();
             $table->timestamps();
         });
     }
