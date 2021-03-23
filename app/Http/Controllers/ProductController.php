@@ -61,4 +61,21 @@ class ProductController extends Controller
   {
     //
   }
+
+  public function getCategories ()
+  {
+    $tipos = Product::distinct()
+      ->orderBy('tipo_zapato')
+      ->get('tipo_zapato');
+    $list = [];
+    foreach ($tipos as $tipo) {
+      array_push($list, $tipo->tipo_zapato);
+    }
+    return response()->json($list);
+  }
+
+  public function getProductsByCategory($category)
+  {
+    return response()->json(Product::where('tipo_zapato', $category)->paginate(5));
+  }
 }
