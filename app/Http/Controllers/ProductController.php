@@ -74,8 +74,9 @@ class ProductController extends Controller
     return response()->json($list);
   }
 
-  public function getProductsByCategory($category)
+  public function getProductsByCategory($category, Request $req)
   {
-    return response()->json(Product::where('tipo_zapato', $category)->paginate(5));
+    return response()->json(Product::where('tipo_zapato', $category)
+      ->paginate($req->limit ? $req->limit : 10));
   }
 }
