@@ -76,7 +76,12 @@ class ProductController extends Controller
 
   public function getProductsByCategory($category, Request $req)
   {
-    return response()->json(Product::where('tipo_zapato', $category)
-      ->paginate($req->limit ? $req->limit : 10));
+    $response = Product::where('tipo_zapato', $category)
+      ->paginate($req->limit ? $req->limit : 10);
+    // dd($response->total());
+    if (!$response->total()) {
+      return response()->json(['data' => 'Sin resultados'], 404);
+    }
+    return response()->json($response);
   }
 }
