@@ -36,7 +36,7 @@ class ProductController extends Controller
    */
   public function show(Product $product)
   {
-    //
+    return response()->json($product);
   }
 
   /**
@@ -78,8 +78,8 @@ class ProductController extends Controller
   {
     $response = Product::where('tipo_zapato', $category)
       ->paginate($req->limit ? $req->limit : 10);
-    // dd($response->total());
-    if (!$response->total()) {
+    // dd(count($response->items()));
+    if (!count($response->items())) {
       return response()->json(['data' => 'Sin resultados'], 404);
     }
     return response()->json($response);
