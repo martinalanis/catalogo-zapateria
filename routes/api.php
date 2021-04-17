@@ -17,8 +17,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+  return $request->user();
 });
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::get('/test', [AuthController::class, 'login']);
 
@@ -26,4 +29,10 @@ Route::group(['middleware' => 'api'], function () {
   Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
   Route::apiResource('products', ProductController::class);
+});
+
+Route::fallback(function () {
+  return response()->json([
+    'message' => 'Recurso no encontrado'
+  ], 404);
 });
