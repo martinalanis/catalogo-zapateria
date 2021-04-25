@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
       [
         'name'      =>  'Administrador',
         'email'     =>  'admin@zapateriasdleon.com',
-        'phone'     =>  '4433123456',
+        'phone'     =>  '4431865219',
         'role_id'   =>  1,
         'password'  =>  Hash::make('123456')
       ],

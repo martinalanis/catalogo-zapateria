@@ -10,7 +10,7 @@ class AuthController extends Controller
 {
   public function login(Request $request)
   {
-    $credentials = $request->only('email', 'password');
+    $credentials = $request->only('phone', 'password');
     if (!auth()->attempt($credentials)) {
       throw new AuthenticationException();
     }
@@ -29,5 +29,10 @@ class AuthController extends Controller
       return response()->json('Sesión cerrada correctamente', 200);
     }
     return response()->json(['message' => 'No se pudo cerrar la sesión'], Response::HTTP_CONFLICT);
+  }
+
+  public function username()
+  {
+    return 'phone';
   }
 }

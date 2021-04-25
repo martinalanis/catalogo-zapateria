@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +31,8 @@ Route::group(['middleware' => 'api'], function () {
   Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
   Route::apiResource('products', ProductController::class);
+  Route::apiResource('users', UserController::class);
+  Route::apiResource('roles', RoleController::class);
 });
 
 Route::fallback(function () {
