@@ -32,7 +32,7 @@ Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::get('/test', [AuthController::class, 'login']);
 
-Route::group(['middleware' => 'auth:sanctum'], function () {
+Route::group(['middleware' => 'api'], function () {
   Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
   Route::apiResource('products', ProductController::class);
