@@ -78,9 +78,9 @@ class UserController extends Controller
         Rule::unique('users')->ignore($user->id),
       ]
     ], [
-      'email.unique' => 'Esta cuenta de correo ya existe, intenta con una diferente',
+      'email.unique' => 'Esta cuenta de correo ya existe',
       'email.email' => 'Formato de email no válido',
-      'phone.unique' => 'Este número de telefono ya existe, intenta con uno diferente',
+      'phone.unique' => 'Este número de telefono ya existe',
     ]);
 
     $user->fill($request->all());
@@ -98,6 +98,18 @@ class UserController extends Controller
    */
   public function destroy(User $user)
   {
-    //
+    if ($user->delete()) {
+      return response()->json($this->messages['delete.success'], 200);
+    }
+    return response()->json($this->messages['delete.fail'], Response::HTTP_CONFLICT);
+  }
+
+  public function changePassword(Request $request, User $user)
+  {
+    $user->password = $request->password;
+    if ($user->save()) {
+      return response()->json('La contraseña se actualizo correctamente', 200);
+    }
+    return response()->json(['message' => 'No se pudo actualizar la contraseña'], Response::HTTP_CONFLICT);
   }
 }
