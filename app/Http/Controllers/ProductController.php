@@ -14,7 +14,7 @@ class ProductController extends Controller
    */
   public function index()
   {
-    return response()->json(Product::paginate(10));
+    return response()->json(Product::all());
   }
 
   /**
@@ -76,12 +76,30 @@ class ProductController extends Controller
 
   public function getProductsByCategory($category, Request $req)
   {
-    $response = Product::where('tipo_zapato', $category)
+    $where = [['tipo_zapato', $category]];
+
+    if($req->type) {
+      array_push($where, ['tipo', $req->type]);
+    }
+
+    $response = Product::where($where)
       ->paginate($req->limit ? $req->limit : 10);
-    // dd(count($response->items()));
     if (!count($response->items())) {
       return response()->json(['data' => 'Sin resultados'], 404);
     }
     return response()->json($response);
+  }
+
+  public function getProductTypesByCategory($category)
+  {
+    $tipos = Product::distinct()
+      ->where('tipo_zapato', $category)
+      ->orderBy('tipo')
+      ->get('tipo');
+    $list = [];
+    foreach ($tipos as $tipo) {
+      array_push($list, $tipo->tipo);
+    }
+    return response()->json($list);
   }
 }

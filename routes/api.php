@@ -32,9 +32,10 @@ Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::get('/test', [AuthController::class, 'login']);
 
-Route::group(['middleware' => 'api'], function () {
+Route::group(['middleware' => 'auth:sanctum'], function () {
   Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
+  Route::get('/products/{category}/types', [ProductController::class, 'getProductTypesByCategory']);
   Route::apiResource('products', ProductController::class);
   Route::apiResource('users', UserController::class);
   Route::post('change-password/{user}', [UserController::class, 'changePassword']);
