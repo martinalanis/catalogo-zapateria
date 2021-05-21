@@ -19,6 +19,7 @@ class Product extends Model
     'imagen',
     'precio_publico',
     'precio_proveedor',
+    'precio_descuento',
     'tipo_zapato'
   ];
 
