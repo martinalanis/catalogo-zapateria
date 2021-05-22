@@ -102,4 +102,30 @@ class ProductController extends Controller
     }
     return response()->json($list);
   }
+
+  public function getOffersCategories()
+  {
+    $tipos = Product::distinct()
+      ->orderBy('tipo_zapato')
+      ->whereNotNull('precio_descuento')
+      ->get('tipo_zapato');
+    $list = [];
+    foreach ($tipos as $tipo) {
+      array_push($list, $tipo->tipo_zapato);
+    }
+    return response()->json($list);
+  }
+
+  public function getOffers(Request $req)
+  {
+    $query = Product::whereNotNull('precio_descuento');
+    if ($req->category) {
+      $query->where('tipo_zapato', $req->category);
+    }
+    $offers = $query->paginate($req->limit ? $req->limit : 10);
+    if (!count($offers->items())) {
+      return response()->json(['data' => 'Sin resultados'], 404);
+    }
+    return response()->json($offers);
+  }
 }
