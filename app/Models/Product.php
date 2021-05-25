@@ -20,7 +20,7 @@ class Product extends Model
     'precio_publico',
     'precio_proveedor',
     'precio_descuento',
-    'tipo_zapato'
+    'categoria'
   ];
 
   /**
@@ -56,8 +56,8 @@ class Product extends Model
     $this->attributes['tipo'] = mb_strtolower($value, 'UTF-8');
   }
 
-  public function setTipoZapatoAttribute($value)
+  public function setCategoriaAttribute($value)
   {
-    $this->attributes['tipo_zapato'] = mb_strtolower($value, 'UTF-8');
+    $this->attributes['categoria'] = mb_strtolower($value, 'UTF-8');
   }
 }

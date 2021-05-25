@@ -35,6 +35,7 @@ Route::get('/test', [AuthController::class, 'login']);
 Route::group(['middleware' => 'auth:sanctum'], function () {
   Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/offers/categories', [ProductController::class, 'getOffersCategories']);
+  Route::get('/products/offers/count', [ProductController::class, 'getOffersCount']);
   Route::get('/products/offers', [ProductController::class, 'getOffers']);
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
   Route::get('/products/{category}/types', [ProductController::class, 'getProductTypesByCategory']);

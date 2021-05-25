@@ -20,7 +20,6 @@ class UserController extends Controller
       $query->where('name', $request->type);
     })->get();
     return response()->json($users);
-    // return response()->json(User::all());
   }
 
   /**

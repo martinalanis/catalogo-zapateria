@@ -12,9 +12,21 @@ class ProductController extends Controller
    *
    * @return \Illuminate\Http\Response
    */
-  public function index()
+  public function index(Request $req)
   {
-    return response()->json(Product::all());
+    $products = Product::query();
+    if ($req->search) {
+      $products->where('marca', 'like', "%{$req->search}%");
+      $products->orWhere('modelo', 'like', "%{$req->search}%");
+      $products->orWhere('color', 'like', "%{$req->search}%");
+      $products->orWhere('numeracion', 'like', "%{$req->search}%");
+    }
+    if ($req->orderBy) {
+      $req->orderDesc
+        ? $products->orderBy($req->orderBy, 'DESC')
+        : $products->orderBy($req->orderBy);
+    }
+    return response()->json($products->paginate($req->limit ? $req->limit : 10));
   }
 
   /**
@@ -65,18 +77,18 @@ class ProductController extends Controller
   public function getCategories ()
   {
     $tipos = Product::distinct()
-      ->orderBy('tipo_zapato')
-      ->get('tipo_zapato');
+      ->orderBy('categoria')
+      ->get('categoria');
     $list = [];
     foreach ($tipos as $tipo) {
-      array_push($list, $tipo->tipo_zapato);
+      array_push($list, $tipo->categoria);
     }
     return response()->json($list);
   }
 
   public function getProductsByCategory($category, Request $req)
   {
-    $where = [['tipo_zapato', $category]];
+    $where = [['categoria', $category]];
 
     if($req->type) {
       array_push($where, ['tipo', $req->type]);
@@ -93,7 +105,7 @@ class ProductController extends Controller
   public function getProductTypesByCategory($category)
   {
     $tipos = Product::distinct()
-      ->where('tipo_zapato', $category)
+      ->where('categoria', $category)
       ->orderBy('tipo')
       ->get('tipo');
     $list = [];
@@ -106,12 +118,12 @@ class ProductController extends Controller
   public function getOffersCategories()
   {
     $tipos = Product::distinct()
-      ->orderBy('tipo_zapato')
+      ->orderBy('categoria')
       ->whereNotNull('precio_descuento')
-      ->get('tipo_zapato');
+      ->get('categoria');
     $list = [];
     foreach ($tipos as $tipo) {
-      array_push($list, $tipo->tipo_zapato);
+      array_push($list, $tipo->categoria);
     }
     return response()->json($list);
   }
@@ -120,12 +132,18 @@ class ProductController extends Controller
   {
     $query = Product::whereNotNull('precio_descuento');
     if ($req->category) {
-      $query->where('tipo_zapato', $req->category);
+      $query->where('categoria', $req->category);
     }
     $offers = $query->paginate($req->limit ? $req->limit : 10);
     if (!count($offers->items())) {
       return response()->json(['data' => 'Sin resultados'], 404);
     }
     return response()->json($offers);
+  }
+
+  public function getOffersCount()
+  {
+    $count = Product::whereNotNull('precio_descuento')->count();
+    return response()->json($count);
   }
 }

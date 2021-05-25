@@ -25,7 +25,7 @@ class CreateProductsTable extends Migration
             $table->decimal('precio_publico', 9, 2)->nullable();
             $table->decimal('precio_proveedor', 9, 2)->nullable();
             $table->decimal('precio_descuento', 9, 2)->nullable();
-            $table->string('tipo_zapato')->nullable();
+            $table->string('categoria')->nullable();
             $table->timestamps();
         });
     }

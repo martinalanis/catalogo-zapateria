@@ -48,7 +48,7 @@ class ProductFactory extends Factory
       'precio_publico'  =>  $this->faker->randomFloat(2, 105, 350),
       'precio_proveedor'=>  $this->faker->randomFloat(2, 105, 280),
       'precio_descuento'=>  $this->faker->randomFloat(2, 105, 280),
-      'tipo_zapato'     =>  $this->faker->randomElement(['DAMA', 'CABALLERO', 'NIÑO'])
+      'categoria'       =>  $this->faker->randomElement(['dama', 'caballero', 'niño', 'niña', 'joven'])
     ];
   }
 }
