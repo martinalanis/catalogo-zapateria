@@ -16,7 +16,7 @@ class ProductController extends Controller
   {
     $products = Product::query();
     if ($req->search) {
-      $products->where('marca', 'like', "%{$req->search}%");
+      $products->where('codigo', 'like', "%{$req->search}%");
       $products->orWhere('modelo', 'like', "%{$req->search}%");
       $products->orWhere('color', 'like', "%{$req->search}%");
       $products->orWhere('numeracion', 'like', "%{$req->search}%");
@@ -37,7 +37,23 @@ class ProductController extends Controller
    */
   public function store(Request $request)
   {
-    //
+    $product = new Product($request->all());
+    // TODO: ver si trae imagen y agregarla a storage
+    $path = 'not save';
+    if ($request->imageFile) {
+      $name = $request->file('imageFile')->getClientOriginalName();
+      $path = $request->file('imageFile')
+        ->storeAs(
+          'public',
+          $name
+        );
+      if ($path) $product->imagen = $name;
+    }
+    // return response()->json($path);
+    if ($product->save()) {
+      return response()->json($this->messages['create.success'], 200);
+    }
+    return response()->json(['errors' => [$this->messages['create.fail']]], Response::HTTP_CONFLICT);
   }
 
   /**
@@ -60,7 +76,12 @@ class ProductController extends Controller
    */
   public function update(Request $request, Product $product)
   {
-    //
+    $product->fill($request->all());
+    // TODO: ver si trae imagen y agregarla a storage
+    return $product->save()
+      ? response()->json($this->messages['update.success'], 200)
+      : response()->json($this->messages['update.fail'], Response::HTTP_CONFLICT);
+    // return response()->json($request, 200);
   }
 
   /**
@@ -71,7 +92,9 @@ class ProductController extends Controller
    */
   public function destroy(Product $product)
   {
-    //
+    return $product->delete()
+      ? response()->json($this->messages['delete.success'], 200)
+      : response()->json($this->messages['delete.fail'], Response::HTTP_CONFLICT);
   }
 
   public function getCategories ()

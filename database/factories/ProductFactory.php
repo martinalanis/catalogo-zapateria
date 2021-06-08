@@ -38,7 +38,7 @@ class ProductFactory extends Factory
     ];
 
     return [
-      'marca'           =>  $this->faker->word(),
+      'codigo'           =>  $this->faker->word(),
       'modelo'          =>  $this->faker->numberBetween(52, 1600),
       'color'           =>  $this->faker->randomElement($colors),
       'numeracion'      =>  $this->faker->randomElement(['22 AL 26', '23 AL 26']),
