@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -49,7 +50,6 @@ class ProductController extends Controller
         );
       if ($path) $product->imagen = $name;
     }
-    // return response()->json($path);
     if ($product->save()) {
       return response()->json($this->messages['create.success'], 200);
     }
@@ -92,9 +92,11 @@ class ProductController extends Controller
    */
   public function destroy(Product $product)
   {
+    Storage::disk('public')->delete($product->imagen);
     return $product->delete()
       ? response()->json($this->messages['delete.success'], 200)
       : response()->json($this->messages['delete.fail'], Response::HTTP_CONFLICT);
+    // return response()->json($this->messages['delete.fail'], Response::HTTP_CONFLICT);
   }
 
   public function getCategories ()
