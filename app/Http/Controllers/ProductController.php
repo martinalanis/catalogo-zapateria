@@ -39,8 +39,6 @@ class ProductController extends Controller
   public function store(Request $request)
   {
     $product = new Product($request->all());
-    // TODO: ver si trae imagen y agregarla a storage
-    $path = 'not save';
     if ($request->imageFile) {
       $name = $request->file('imageFile')->getClientOriginalName();
       $path = $request->file('imageFile')
@@ -78,6 +76,21 @@ class ProductController extends Controller
   {
     $product->fill($request->all());
     // TODO: ver si trae imagen y agregarla a storage
+    if ($request->imageFile) {
+      // Guardamos nueva imagen
+      $name = $request->file('imageFile')->getClientOriginalName();
+      $path = $request->file('imageFile')
+      ->storeAs(
+        'public',
+        $name
+      );
+      // Si se guardo la nueva imagen
+      if ($path) {
+        // Eliminamos imagen anterior
+        Storage::disk('public')->delete($product->imagen);
+        $product->imagen = $name;
+      }
+    }
     return $product->save()
       ? response()->json($this->messages['update.success'], 200)
       : response()->json($this->messages['update.fail'], Response::HTTP_CONFLICT);
