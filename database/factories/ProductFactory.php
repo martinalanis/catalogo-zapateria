@@ -37,17 +37,19 @@ class ProductFactory extends Factory
       'BEIGE'
     ];
 
+    $colorsArray = [
+      $this->faker->randomElement($colors),
+      $this->faker->randomElement($colors)
+    ];
+
     return [
-      'codigo'           =>  $this->faker->word(),
+      'codigo'          =>  $this->faker->word(),
       'modelo'          =>  $this->faker->numberBetween(52, 1600),
-      'color'           =>  $this->faker->randomElement($colors),
-      'numeracion'      =>  $this->faker->randomElement(['22 AL 26', '23 AL 26']),
+      'colores'         =>  json_encode($colorsArray),
+      // 'numeracion'      =>  $this->faker->randomElement(['22 AL 26', '23 AL 26']),
       'material'        =>  $this->faker->randomElement(['TIPO PIEL', 'GAMUZA', 'TELA', 'NUBOCK']),
-      'tipo'            =>  $this->faker->randomElement(['ZAPATO PISO', 'HUARACHE']),
+      'tipo'            =>  $this->faker->randomElement(['ZAPATO PISO', 'HUARACHE', 'TENNIS']),
       'imagen'          =>  $this->faker->imageUrl(640, 480, 'ZapateriadLeon'),
-      'precio_publico'  =>  $this->faker->randomFloat(2, 105, 350),
-      'precio_proveedor'=>  $this->faker->randomFloat(2, 105, 280),
-      'precio_descuento'=>  $this->faker->randomFloat(2, 105, 280),
       'categoria'       =>  $this->faker->randomElement(['dama', 'caballero', 'niño', 'niña', 'joven'])
     ];
   }
