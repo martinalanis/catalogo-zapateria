@@ -32,7 +32,7 @@ Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::get('/test', [AuthController::class, 'login']);
 
-Route::group(['middleware' => 'auth:sanctum'], function () {
+Route::group(['middleware' => 'api'], function () {
   Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/offers/categories', [ProductController::class, 'getOffersCategories']);
   Route::get('/products/offers/count', [ProductController::class, 'getOffersCount']);

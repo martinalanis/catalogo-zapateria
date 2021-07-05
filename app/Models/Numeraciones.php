@@ -10,7 +10,6 @@ class Numeraciones extends Model
   use HasFactory;
 
   protected $fillable = [
-    'name',
     'product_id',
     'name',
     'precio_publico',
@@ -22,6 +21,8 @@ class Numeraciones extends Model
     'precio_publico' => 'float',
     'precio_proveedor' => 'float',
     'precio_descuento' => 'float',
+    'created_at' => 'datetime:d-m-Y H:i',
+    'updated_at' => 'datetime:d-m-Y H:i'
   ];
 
   public function product()

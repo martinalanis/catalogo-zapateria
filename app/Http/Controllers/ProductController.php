@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Numeraciones;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -39,6 +41,13 @@ class ProductController extends Controller
   public function store(Request $request)
   {
     $product = new Product($request->all());
+    $numeraciones = [];
+    if ($request->numeraciones) {
+      foreach ($request->numeraciones as $numeracion) {
+        array_push($numeraciones, new Numeraciones($numeracion));
+      }
+    }
+    // return response()->json($numeraciones, 200);
     if ($request->imageFile) {
       $name = $request->file('imageFile')->getClientOriginalName();
       $path = $request->file('imageFile')
@@ -48,10 +57,16 @@ class ProductController extends Controller
         );
       if ($path) $product->imagen = $name;
     }
-    if ($product->save()) {
-      return response()->json($this->messages['create.success'], 200);
+    DB::beginTransaction();
+    try {
+      $product->save();
+      if (count($numeraciones)) $product->numeraciones()->saveMany($numeraciones);
+      DB::commit();
+    } catch (\Throwable $th) {
+      DB::rollback();
+      return response()->json(['errors' => [$this->messages['create.fail']]], Response::HTTP_CONFLICT);
     }
-    return response()->json(['errors' => [$this->messages['create.fail']]], Response::HTTP_CONFLICT);
+    return response()->json($this->messages['create.success'], 200);
   }
 
   /**

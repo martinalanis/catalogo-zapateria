@@ -45,7 +45,7 @@ class ProductFactory extends Factory
     return [
       'codigo'          =>  $this->faker->word(),
       'modelo'          =>  $this->faker->numberBetween(52, 1600),
-      'colores'         =>  json_encode($colorsArray),
+      'colores'         =>  $colorsArray,
       // 'numeracion'      =>  $this->faker->randomElement(['22 AL 26', '23 AL 26']),
       'material'        =>  $this->faker->randomElement(['TIPO PIEL', 'GAMUZA', 'TELA', 'NUBOCK']),
       'tipo'            =>  $this->faker->randomElement(['ZAPATO PISO', 'HUARACHE', 'TENNIS']),
