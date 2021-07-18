@@ -21,8 +21,8 @@ class ProductController extends Controller
     if ($req->search) {
       $products->where('codigo', 'like', "%{$req->search}%");
       $products->orWhere('modelo', 'like', "%{$req->search}%");
-      $products->orWhere('color', 'like', "%{$req->search}%");
-      $products->orWhere('numeracion', 'like', "%{$req->search}%");
+      $products->orWhere('colores', 'like', "%{$req->search}%");
+      // $products->orWhere('numeracion', 'like', "%{$req->search}%");
     }
     if ($req->orderBy) {
       $req->orderDesc
@@ -90,7 +90,6 @@ class ProductController extends Controller
   public function update(Request $request, Product $product)
   {
     $product->fill($request->all());
-    // TODO: ver si trae imagen y agregarla a storage
     if ($request->imageFile) {
       // Guardamos nueva imagen
       $name = $request->file('imageFile')->getClientOriginalName();
