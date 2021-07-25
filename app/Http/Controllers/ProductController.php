@@ -207,24 +207,42 @@ class ProductController extends Controller
     // Sacar unique en base a codigo de zapato $array[1]
     // Separar
     $ordered = [];
+    // Recorrer data extraida de excel
     foreach ($array[0] as $row) {
+      // Verificar si ya existe el registro en el array unique
       $key = array_search($row[1], array_column($ordered, 'codigo'));
 
+      $numeracion = [
+        'numeracion' => $row[4],
+        'precio_publico' => $row[8],
+        'precio_proveedor' => $row[9],
+        'precio_descuento' => $row[10]
+      ];
+
       if ($key !== false) {
-        array_push($ordered[$key]['colores'], $row[3]);
+        // Buscar si ya existe el color, sino existe se agrega
+        $colorExists = in_array($row[3], $ordered[$key]['colores']);
+        if (!$colorExists) {
+          array_push($ordered[$key]['colores'], $row[3]);
+        }
+
+        $key2 = array_search($row[4], array_column($ordered[$key]['numeraciones'], 'numeracion'));
+
+        // No existe la numeracion, se agrega
+        if ($key2 === false) {
+          array_push($ordered[$key]['numeraciones'], $numeracion);
+        }
       } else {
+        // Agregar nuevo product
         array_push($ordered, [
           'codigo' => $row[1],
           'modelo' => $row[2],
           'colores' => [$row[3]],
-          'numeracion' => $row[4],
           'material' => $row[5],
           'tipo' => $row[6],
           'imagen' => $row[7],
-          'precio_publico' => $row[8],
-          'precio_proveedor' => $row[9],
-          'precio_descuento' => $row[10],
-          'categoria' => $row[11]
+          'categoria' => $row[11],
+          'numeraciones' => [$numeracion]
         ]);
       }
     }
