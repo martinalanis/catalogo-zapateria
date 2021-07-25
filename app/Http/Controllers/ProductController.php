@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ProductsImport;
 use App\Models\Numeraciones;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
 {
@@ -201,6 +203,38 @@ class ProductController extends Controller
 
   public function uploadExcel (Request $request)
   {
-    return response()->json('Upload excel');
+    $array = Excel::toArray(null, $request->file('file'));
+    // Sacar unique en base a codigo de zapato $array[1]
+    // Separar
+    $ordered = [];
+    foreach ($array[0] as $row) {
+      $key = array_search($row[1], array_column($ordered, 'codigo'));
+
+      if ($key !== false) {
+        array_push($ordered[$key]['colores'], $row[3]);
+      } else {
+        array_push($ordered, [
+          'codigo' => $row[1],
+          'modelo' => $row[2],
+          'colores' => [$row[3]],
+          'numeracion' => $row[4],
+          'material' => $row[5],
+          'tipo' => $row[6],
+          'imagen' => $row[7],
+          'precio_publico' => $row[8],
+          'precio_proveedor' => $row[9],
+          'precio_descuento' => $row[10],
+          'categoria' => $row[11]
+        ]);
+      }
+    }
+
+    // foreach ($ordered as $row) {
+
+    // }
+    // $key = array_search($request->search, array_column($ordered, 'codigo'));
+    // return response()->json(['key' => $key, 'orderes' => $ordered]);
+    return response()->json($ordered);
   }
+
 }
