@@ -45,6 +45,8 @@ Route::group(['middleware' => 'api'], function () {
   Route::apiResource('roles', RoleController::class);
 });
 
+Route::post('/products/excel/upload', [ProductController::class, 'uploadExcel']);
+
 Route::group(['prefix' => 'client', 'middleware' => 'api'], function () {
   // Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/offers/categories', [ProductController::class, 'getOffersCategories']);
@@ -57,6 +59,11 @@ Route::group(['prefix' => 'client', 'middleware' => 'api'], function () {
   // Route::apiResource('users', UserController::class);
   // Route::post('change-password/{user}', [UserController::class, 'changePassword']);
   // Route::apiResource('roles', RoleController::class);
+
+  // Route::group(['prefix' => 'products'], function () {
+  //   Route::get('/{category}/all', [ProductController::class, 'getProductsByCategory']);
+  //   Route::get('/{product}', [ProductController::class, 'show']);
+  // });
 });
 
 Route::fallback(function () {

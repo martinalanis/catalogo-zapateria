@@ -198,4 +198,9 @@ class ProductController extends Controller
     $count = Product::whereNotNull('precio_descuento')->count();
     return response()->json($count);
   }
+
+  public function uploadExcel (Request $request)
+  {
+    return response()->json('Upload excel');
+  }
 }
