@@ -212,11 +212,15 @@ class ProductController extends Controller
       // Verificar si ya existe el registro en el array unique
       $key = array_search($row[1], array_column($ordered, 'codigo'));
 
+      $precio_publico = $row[8] === 'NULL' ? NULL : $row[8];
+      $precio_proveedor = $row[9] === 'NULL' ? NULL : $row[9];
+      $precio_descuento = $row[10] === 'NULL' ? NULL : $row[10];
+
       $numeracion = [
-        'numeracion' => $row[4],
-        'precio_publico' => $row[8],
-        'precio_proveedor' => $row[9],
-        'precio_descuento' => $row[10]
+        'name' => $row[4],
+        'precio_publico' => $precio_publico,
+        'precio_proveedor' => $precio_proveedor,
+        'precio_descuento' => $precio_descuento
       ];
 
       if ($key !== false) {
@@ -226,7 +230,7 @@ class ProductController extends Controller
           array_push($ordered[$key]['colores'], $row[3]);
         }
 
-        $key2 = array_search($row[4], array_column($ordered[$key]['numeraciones'], 'numeracion'));
+        $key2 = array_search($row[4], array_column($ordered[$key]['numeraciones'], 'name'));
 
         // No existe la numeracion, se agrega
         if ($key2 === false) {
@@ -247,12 +251,29 @@ class ProductController extends Controller
       }
     }
 
-    // foreach ($ordered as $row) {
+    // TODO: Eliminar productos en db
 
-    // }
-    // $key = array_search($request->search, array_column($ordered, 'codigo'));
-    // return response()->json(['key' => $key, 'orderes' => $ordered]);
-    return response()->json($ordered);
+    DB::beginTransaction();
+    try {
+      foreach ($ordered as $row) {
+        $product = new Product($row);
+        $numeraciones = [];
+        if (count($row['numeraciones'])) {
+          foreach ($row['numeraciones'] as $numeracion) {
+            array_push($numeraciones, new Numeraciones($numeracion));
+          }
+        }
+        $product->save();
+        if (count($numeraciones)) $product->numeraciones()->saveMany($numeraciones);
+      }
+      DB::commit();
+    } catch (\Throwable $th) {
+      DB::rollback();
+      dd($th);
+      return response()->json(['errors' => $th->getMessage()], Response::HTTP_CONFLICT);
+    }
+    return response()->json($this->messages['create.success'], 200);
+    // return response()->json($ordered);
   }
 
 }

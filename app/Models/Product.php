@@ -59,4 +59,13 @@ class Product extends Model
   {
     $this->attributes['categoria'] = mb_strtolower($value, 'UTF-8');
   }
+
+  /**
+   * Acessors
+   */
+  public function getImagenAttribute($value)
+  {
+    // return "https://zapateria.com/img/{$value}";
+    return env('IMAGES_URL') . "/{$value}";
+  }
 }
