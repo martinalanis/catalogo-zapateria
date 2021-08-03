@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
@@ -148,6 +149,11 @@ class ProductController extends Controller
       array_push($where, ['tipo', $req->type]);
     }
 
+    // $products = Product::where($where);
+    if ($req->search) {
+      array_push($where, ['codigo', 'like', "%{$req->search}%"]);
+    }
+
     $response = Product::where($where)
       ->paginate($req->limit ? $req->limit : 10);
     if (!count($response->items())) {
@@ -197,12 +203,15 @@ class ProductController extends Controller
 
   public function getOffersCount()
   {
-    $count = Product::whereNotNull('precio_descuento')->count();
+    $count = Product::whereHas('numeraciones', function ($query) {
+      $query->whereNotNull('precio_descuento');
+    })->count();
     return response()->json($count);
   }
 
   public function uploadExcel (Request $request)
   {
+
     $array = Excel::toArray(null, $request->file('file'));
     // Sacar unique en base a codigo de zapato $array[1]
     // Separar
@@ -215,9 +224,10 @@ class ProductController extends Controller
       $precio_publico = $row[8] === 'NULL' ? NULL : $row[8];
       $precio_proveedor = $row[9] === 'NULL' ? NULL : $row[9];
       $precio_descuento = $row[10] === 'NULL' ? NULL : $row[10];
+      $num_name = strtolower($row[4]);
 
       $numeracion = [
-        'name' => $row[4],
+        'name' => $num_name,
         'precio_publico' => $precio_publico,
         'precio_proveedor' => $precio_proveedor,
         'precio_descuento' => $precio_descuento
@@ -230,7 +240,7 @@ class ProductController extends Controller
           array_push($ordered[$key]['colores'], $row[3]);
         }
 
-        $key2 = array_search($row[4], array_column($ordered[$key]['numeraciones'], 'name'));
+        $key2 = array_search($num_name, array_column($ordered[$key]['numeraciones'], 'name'));
 
         // No existe la numeracion, se agrega
         if ($key2 === false) {
@@ -255,6 +265,8 @@ class ProductController extends Controller
 
     DB::beginTransaction();
     try {
+      $this->deleteAllProducts();
+
       foreach ($ordered as $row) {
         $product = new Product($row);
         $numeraciones = [];
@@ -272,8 +284,21 @@ class ProductController extends Controller
       dd($th);
       return response()->json(['errors' => $th->getMessage()], Response::HTTP_CONFLICT);
     }
-    return response()->json($this->messages['create.success'], 200);
-    // return response()->json($ordered);
+    // return response()->json($this->messages['create.success'], 200);
+    return response()->json($ordered);
+  }
+
+  public function deleteAllProducts()
+  {
+    try {
+      $prods = Product::all();
+      foreach ($prods as $prod) {
+        // $prod->numeraciones()->delete();
+        $prod->delete();
+      }
+    } catch (\Throwable $th) {
+      throw $th;
+    }
   }
 
 }
