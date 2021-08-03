@@ -12,7 +12,7 @@ class AuthController extends Controller
 {
   public function login(Request $request)
   {
-    $credentials = $request->only('phone', 'password');
+    $credentials = $this->getCredentials($request);
     if (!auth()->attempt($credentials)) {
       throw new AuthenticationException();
     }
@@ -26,11 +26,15 @@ class AuthController extends Controller
 
   public function adminLogin(Request $request)
   {
+
+    $paramName = $this->getParamName($request);
+
     $found = User::where([
       ['role_id', '=', 1],
-      ['phone', '=', $request->phone],
+      [$paramName, '=', $request->user],
     ])->exists();
-    $credentials = $request->only('phone', 'password');
+
+    $credentials = $this->getCredentials($request);
     if (!$found || !auth()->attempt($credentials)) {
       throw new AuthenticationException();
     }
@@ -40,6 +44,17 @@ class AuthController extends Controller
      */
     // $request->session()->regenerate();
     return response()->json(null, 201);
+  }
+
+  private function getCredentials($request)
+  {
+    $paramName = $this->getParamName($request);
+    return ['password' => $request->password, $paramName => $request->user];
+  }
+
+  private function getParamName($request)
+  {
+    return preg_replace('/[^0-9]/', '', $request->user) ? 'phone' : 'email';
   }
 
   public function logout()
