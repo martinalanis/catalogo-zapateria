@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Imports\ProductsImport;
 use App\Models\Numeraciones;
 use App\Models\Product;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
@@ -211,8 +213,62 @@ class ProductController extends Controller
 
   public function uploadExcel (Request $request)
   {
+    $this->validate($request, [
+      'file' => 'required'
+    ], [
+      'file.required' => 'El archivo es requerido',
+    ]);
 
-    $array = Excel::toArray(null, $request->file('file'));
+    $valid_extensions = ['csv', 'xlsx'];
+    if (!in_array($request->file->getClientOriginalExtension(), $valid_extensions)) {
+      return response()->json(['message' => 'Error de formato'], 409);
+    }
+    $ordered = $this->generateArrayFromExcel($request->file('file'));
+
+    DB::beginTransaction();
+    try {
+
+      if (!$this->deleteAllProducts($request->reorder_ids)) throw new Exception("Error actualizando data", 1);
+
+      foreach ($ordered as $row) {
+        $product = new Product($row);
+        $numeraciones = [];
+        if (count($row['numeraciones'])) {
+          foreach ($row['numeraciones'] as $numeracion) {
+            array_push($numeraciones, new Numeraciones($numeracion));
+          }
+        }
+        $product->save();
+        if (count($numeraciones)) $product->numeraciones()->saveMany($numeraciones);
+      }
+      DB::commit();
+    } catch (\Throwable $th) {
+      DB::rollback();
+      return response()->json(['errors' => $th->getMessage()], Response::HTTP_CONFLICT);
+    }
+    return response()->json($this->messages['create.success'], 200);
+  }
+
+  public function deleteAllProducts($reorder = false)
+  {
+    try {
+      $prods = Product::all();
+      foreach ($prods as $prod) {
+        if (!$prod->delete()) return false;
+      }
+      if ($reorder) {
+        DB::statement('ALTER TABLE numeraciones AUTO_INCREMENT = 1');
+        DB::statement('ALTER TABLE products AUTO_INCREMENT = 1');
+      }
+      return true;
+    } catch (\Throwable $th) {
+      throw $th;
+    }
+  }
+
+  public function generateArrayFromExcel($file)
+  {
+    $array = Excel::toArray(null, $file);
     // Sacar unique en base a codigo de zapato $array[1]
     // Separar
     $ordered = [];
@@ -261,44 +317,7 @@ class ProductController extends Controller
       }
     }
 
-    // TODO: Eliminar productos en db
-
-    DB::beginTransaction();
-    try {
-      $this->deleteAllProducts();
-
-      foreach ($ordered as $row) {
-        $product = new Product($row);
-        $numeraciones = [];
-        if (count($row['numeraciones'])) {
-          foreach ($row['numeraciones'] as $numeracion) {
-            array_push($numeraciones, new Numeraciones($numeracion));
-          }
-        }
-        $product->save();
-        if (count($numeraciones)) $product->numeraciones()->saveMany($numeraciones);
-      }
-      DB::commit();
-    } catch (\Throwable $th) {
-      DB::rollback();
-      dd($th);
-      return response()->json(['errors' => $th->getMessage()], Response::HTTP_CONFLICT);
-    }
-    // return response()->json($this->messages['create.success'], 200);
-    return response()->json($ordered);
-  }
-
-  public function deleteAllProducts()
-  {
-    try {
-      $prods = Product::all();
-      foreach ($prods as $prod) {
-        // $prod->numeraciones()->delete();
-        $prod->delete();
-      }
-    } catch (\Throwable $th) {
-      throw $th;
-    }
+    return $ordered;
   }
 
 }
