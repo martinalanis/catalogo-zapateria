@@ -37,6 +37,7 @@ Route::group(['middleware' => 'api'], function () {
   Route::get('/products/offers/categories', [ProductController::class, 'getOffersCategories']);
   Route::get('/products/offers/count', [ProductController::class, 'getOffersCount']);
   Route::get('/products/offers', [ProductController::class, 'getOffers']);
+  Route::get('/products/colores', [ProductController::class, 'getColores']);
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
   Route::get('/products/{category}/types', [ProductController::class, 'getProductTypesByCategory']);
   Route::apiResource('products', ProductController::class);

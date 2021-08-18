@@ -9,6 +9,8 @@ class Product extends Model
 {
   use HasFactory;
 
+  protected $appends = ['imagen_url'];
+
   protected $fillable = [
     'codigo',
     'modelo',
@@ -63,9 +65,9 @@ class Product extends Model
   /**
    * Acessors
    */
-  public function getImagenAttribute($value)
+  public function getImagenUrlAttribute()
   {
     // return "https://zapateria.com/img/{$value}";
-    return env('IMAGES_URL') . "/{$value}";
+    return env('IMAGES_URL') . "/{$this->imagen}";
   }
 }

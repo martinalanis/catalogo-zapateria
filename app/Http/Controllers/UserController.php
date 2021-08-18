@@ -31,7 +31,7 @@ class UserController extends Controller
   public function store(Request $request)
   {
     $this->validate($request, [
-      'email' => 'required|email|unique:App\Models\User',
+      'email' => 'nullable|email|unique:App\Models\User',
       'phone' => 'required|unique:App\Models\User',
     ], [
       'email.unique' => 'Esta cuenta de correo ya existe, intenta con una diferente',

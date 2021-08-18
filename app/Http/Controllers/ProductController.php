@@ -131,6 +131,22 @@ class ProductController extends Controller
     // return response()->json($this->messages['delete.fail'], Response::HTTP_CONFLICT);
   }
 
+  public function getColores()
+  {
+    $colores = Product::distinct()
+      ->orderBy('colores')
+      ->get('colores');
+    $list = [];
+    foreach ($colores as $color) {
+      foreach ($color->colores as $c) {
+        if (!in_array($c, $list)) {
+          array_push($list, $c);
+        }
+      }
+    }
+    return response()->json($list);
+  }
+
   public function getCategories ()
   {
     $tipos = Product::distinct()
@@ -180,8 +196,9 @@ class ProductController extends Controller
   public function getOffersCategories()
   {
     $tipos = Product::distinct()
-      ->orderBy('categoria')
-      ->whereNotNull('precio_descuento')
+      ->whereHas('numeraciones', function ($query) {
+        $query->whereNotNull('precio_descuento');
+      })->orderBy('categoria')
       ->get('categoria');
     $list = [];
     foreach ($tipos as $tipo) {
@@ -192,7 +209,9 @@ class ProductController extends Controller
 
   public function getOffers(Request $req)
   {
-    $query = Product::whereNotNull('precio_descuento');
+    $query = Product::whereHas('numeraciones', function ($query) {
+      $query->whereNotNull('precio_descuento');
+    });
     if ($req->category) {
       $query->where('categoria', $req->category);
     }
@@ -281,6 +300,7 @@ class ProductController extends Controller
       $precio_proveedor = $row[9] === 'NULL' ? NULL : $row[9];
       $precio_descuento = $row[10] === 'NULL' ? NULL : $row[10];
       $num_name = strtolower($row[4]);
+      $color = strtolower($row[3]);
 
       $numeracion = [
         'name' => $num_name,
@@ -291,9 +311,9 @@ class ProductController extends Controller
 
       if ($key !== false) {
         // Buscar si ya existe el color, sino existe se agrega
-        $colorExists = in_array($row[3], $ordered[$key]['colores']);
+        $colorExists = in_array($color, $ordered[$key]['colores']);
         if (!$colorExists) {
-          array_push($ordered[$key]['colores'], $row[3]);
+          array_push($ordered[$key]['colores'], $color);
         }
 
         $key2 = array_search($num_name, array_column($ordered[$key]['numeraciones'], 'name'));
@@ -307,7 +327,7 @@ class ProductController extends Controller
         array_push($ordered, [
           'codigo' => $row[1],
           'modelo' => $row[2],
-          'colores' => [$row[3]],
+          'colores' => [$color],
           'material' => $row[5],
           'tipo' => $row[6],
           'imagen' => $row[7],
