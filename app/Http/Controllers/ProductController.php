@@ -7,6 +7,7 @@ use App\Models\Numeraciones;
 use App\Models\Product;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -94,25 +95,63 @@ class ProductController extends Controller
    */
   public function update(Request $request, Product $product)
   {
-    $product->fill($request->all());
-    if ($request->imageFile) {
-      // Guardamos nueva imagen
-      $name = $request->file('imageFile')->getClientOriginalName();
-      $path = $request->file('imageFile')
-      ->storeAs(
-        'public',
-        $name
-      );
-      // Si se guardo la nueva imagen
-      if ($path) {
-        // Eliminamos imagen anterior
-        Storage::disk('public')->delete($product->imagen);
-        $product->imagen = $name;
+    // return response()->json($numeraciones, 400);
+    DB::beginTransaction();
+    try {
+      $product->fill($request->all());
+      // if ($request->imageFile) {
+      //   // Guardamos nueva imagen
+      //   $name = $request->file('imageFile')->getClientOriginalName();
+      //   $path = $request->file('imageFile')
+      //   ->storeAs(
+      //     'public',
+      //     $name
+      //   );
+      //   // Si se guardo la nueva imagen
+      //   if ($path) {
+      //     // Eliminamos imagen anterior
+      //     Storage::disk('public')->delete($product->imagen);
+      //     $product->imagen = $name;
+      //   }
+      // }
+      $numeraciones = [];
+      foreach ($request->numeraciones as $numeracion) {
+        $arr = (array)json_decode($numeracion);
+        // $model = Numeraciones::firstOrNew(
+        //   ['id' => isset($arr['id']) ? $arr['id'] : null]
+        // );
+        // $model->fill($arr);
+        array_push($numeraciones, $arr);
       }
+      $resp = $this->syncNumeraciones($product->numeraciones, $numeraciones);
+
+      foreach ($resp['create'] as $item) {
+        $numeracion = new Numeraciones($item);
+        $numeracion->product_id = $product->id;
+        $numeracion->save();
+      }
+
+      foreach ($resp['update'] as $item) {
+        $numeracion = Numeraciones::find($item['id']);
+        $numeracion->fill($item);
+        $numeracion->save();
+      }
+
+      foreach ($resp['delete'] as $item) {
+        $numeracion = Numeraciones::find($item['id']);
+        $numeracion->delete();
+      }
+      // $resp = $product->numeraciones;
+      // dd($numeraciones);
+      DB::commit();
+      // return response()->json($arr2, 400);
+      return $product->save()
+        ? response()->json($this->messages['update.success'], 200)
+        : response()->json($this->messages['update.fail'], Response::HTTP_CONFLICT);
+    } catch (\Throwable $th) {
+      DB::rollback();
+      return response()->json(['errors' => $th->getMessage()], Response::HTTP_CONFLICT);
     }
-    return $product->save()
-      ? response()->json($this->messages['update.success'], 200)
-      : response()->json($this->messages['update.fail'], Response::HTTP_CONFLICT);
     // return response()->json($request, 200);
   }
 
@@ -338,6 +377,35 @@ class ProductController extends Controller
     }
 
     return $ordered;
+  }
+
+  public function syncNumeraciones($oldData, $newData)
+  {
+    $oldIds = Arr::pluck($oldData, 'id');
+    $newIds = array_filter(Arr::pluck($newData, 'id'), 'is_numeric');
+
+    // return $newIds;
+
+    // groups
+    $delete = collect($oldData)
+      ->filter(function ($model) use ($newIds) {
+        return !in_array($model->id, $newIds);
+      });
+    // return $delete;
+    $update = collect($newData)
+      ->filter(function ($model) use ($oldIds) {
+        return isset($model['id']) && !is_null($model['id']) && in_array($model['id'], $oldIds);
+      });
+
+    $create = collect($newData)
+      ->filter(function ($model) {
+        return !isset($model['id']) || is_null($model['id']);
+        // return !property_exists($model, 'id');
+      });
+
+      // return $update;
+
+    return compact('delete', 'update', 'create');
   }
 
 }
