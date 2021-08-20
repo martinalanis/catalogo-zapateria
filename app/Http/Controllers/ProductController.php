@@ -95,56 +95,32 @@ class ProductController extends Controller
    */
   public function update(Request $request, Product $product)
   {
-    // return response()->json($numeraciones, 400);
     DB::beginTransaction();
     try {
       $product->fill($request->all());
-      // if ($request->imageFile) {
-      //   // Guardamos nueva imagen
-      //   $name = $request->file('imageFile')->getClientOriginalName();
-      //   $path = $request->file('imageFile')
-      //   ->storeAs(
-      //     'public',
-      //     $name
-      //   );
-      //   // Si se guardo la nueva imagen
-      //   if ($path) {
-      //     // Eliminamos imagen anterior
-      //     Storage::disk('public')->delete($product->imagen);
-      //     $product->imagen = $name;
-      //   }
-      // }
+      if ($request->imageFile) {
+        // Guardamos nueva imagen
+        $name = $request->file('imageFile')->getClientOriginalName();
+        $path = $request->file('imageFile')
+        ->storeAs(
+          'public',
+          $name
+        );
+        // Si se guardo la nueva imagen
+        if ($path) {
+          // Eliminamos imagen anterior
+          Storage::disk('public')->delete($product->imagen);
+          $product->imagen = $name;
+        }
+      }
       $numeraciones = [];
       foreach ($request->numeraciones as $numeracion) {
         $arr = (array)json_decode($numeracion);
-        // $model = Numeraciones::firstOrNew(
-        //   ['id' => isset($arr['id']) ? $arr['id'] : null]
-        // );
-        // $model->fill($arr);
         array_push($numeraciones, $arr);
       }
-      $resp = $this->syncNumeraciones($product->numeraciones, $numeraciones);
-
-      foreach ($resp['create'] as $item) {
-        $numeracion = new Numeraciones($item);
-        $numeracion->product_id = $product->id;
-        $numeracion->save();
-      }
-
-      foreach ($resp['update'] as $item) {
-        $numeracion = Numeraciones::find($item['id']);
-        $numeracion->fill($item);
-        $numeracion->save();
-      }
-
-      foreach ($resp['delete'] as $item) {
-        $numeracion = Numeraciones::find($item['id']);
-        $numeracion->delete();
-      }
-      // $resp = $product->numeraciones;
-      // dd($numeraciones);
+      $resp = $this->getCrudNumeraciones($product->numeraciones, $numeraciones);
+      $this->executeCrudNumeraciones($resp, $product->id);
       DB::commit();
-      // return response()->json($arr2, 400);
       return $product->save()
         ? response()->json($this->messages['update.success'], 200)
         : response()->json($this->messages['update.fail'], Response::HTTP_CONFLICT);
@@ -379,12 +355,10 @@ class ProductController extends Controller
     return $ordered;
   }
 
-  public function syncNumeraciones($oldData, $newData)
+  public function getCrudNumeraciones($oldData, $newData)
   {
     $oldIds = Arr::pluck($oldData, 'id');
     $newIds = array_filter(Arr::pluck($newData, 'id'), 'is_numeric');
-
-    // return $newIds;
 
     // groups
     $delete = collect($oldData)
@@ -403,9 +377,32 @@ class ProductController extends Controller
         // return !property_exists($model, 'id');
       });
 
-      // return $update;
 
     return compact('delete', 'update', 'create');
+  }
+
+  public function executeCrudNumeraciones($resp, $id)
+  {
+    try {
+      foreach ($resp['create'] as $item) {
+        $numeracion = new Numeraciones($item);
+        $numeracion->product_id = $id;
+        $numeracion->save();
+      }
+
+      foreach ($resp['update'] as $item) {
+        $numeracion = Numeraciones::find($item['id']);
+        $numeracion->fill($item);
+        $numeracion->save();
+      }
+
+      foreach ($resp['delete'] as $item) {
+        $numeracion = Numeraciones::find($item['id']);
+        $numeracion->delete();
+      }
+    } catch (\Throwable $th) {
+      throw $th;
+    }
   }
 
 }
