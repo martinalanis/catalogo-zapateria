@@ -50,7 +50,7 @@ class ProductController extends Controller
     $numeraciones = [];
     if ($request->numeraciones) {
       foreach ($request->numeraciones as $numeracion) {
-        array_push($numeraciones, new Numeraciones($numeracion));
+        array_push($numeraciones, new Numeraciones((array)json_decode($numeracion)));
       }
     }
     // return response()->json($numeraciones, 200);
@@ -70,7 +70,7 @@ class ProductController extends Controller
       DB::commit();
     } catch (\Throwable $th) {
       DB::rollback();
-      return response()->json(['errors' => [$this->messages['create.fail']]], Response::HTTP_CONFLICT);
+      return response()->json(['errors' => $th->getMessage()], Response::HTTP_CONFLICT);
     }
     return response()->json($this->messages['create.success'], 200);
   }
@@ -393,6 +393,9 @@ class ProductController extends Controller
       foreach ($resp['update'] as $item) {
         $numeracion = Numeraciones::find($item['id']);
         $numeracion->fill($item);
+        $numeracion->precio_publico = filled($item['precio_publico']) ? $item['precio_publico'] : null;
+        $numeracion->precio_proveedor = filled($item['precio_proveedor']) ? $item['precio_proveedor'] : null;
+        $numeracion->precio_descuento = filled($item['precio_descuento']) ? $item['precio_descuento'] : null;
         $numeracion->save();
       }
 
