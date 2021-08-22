@@ -42,9 +42,11 @@ class User extends Authenticatable
    * @var array
    */
   protected $casts = [
-    'email_verified_at' => 'datetime',
+    'email_verified_at' => 'datetime:d/m/Y H:i',
     'status' => 'integer',
     'role_id' => 'integer',
+    'created_at' => 'datetime:d/m/Y H:i',
+    'updated_at' => 'datetime:d/m/Y H:i'
   ];
 
   protected $with = ['role'];

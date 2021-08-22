@@ -23,8 +23,8 @@ class Product extends Model
 
   protected $casts = [
     'colores' => 'array',
-    'created_at' => 'datetime:d-m-Y H:i',
-    'updated_at' => 'datetime:d-m-Y H:i'
+    'created_at' => 'datetime:d/m/Y H:i',
+    'updated_at' => 'datetime:d/m/Y H:i'
   ];
 
   protected $with = ['numeraciones'];
