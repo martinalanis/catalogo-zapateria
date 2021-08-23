@@ -300,22 +300,43 @@ class ProductController extends Controller
     }
   }
 
+  /** Solo para testing de json */
+  public function excelToJSON(Request $request)
+  {
+    $this->validate($request, [
+      'file' => 'required'
+    ], [
+      'file.required' => 'El archivo es requerido',
+    ]);
+
+    $valid_extensions = ['csv', 'xlsx'];
+    if (!in_array($request->file->getClientOriginalExtension(), $valid_extensions)) {
+      return response()->json(['message' => 'Error de formato'], 409);
+    }
+    $ordered = $this->generateArrayFromExcel($request->file('file'));
+
+    return response()->json($ordered);
+  }
+
   public function generateArrayFromExcel($file)
   {
     $array = Excel::toArray(null, $file);
+    // return $array;
     // Sacar unique en base a codigo de zapato $array[1]
     // Separar
     $ordered = [];
     // Recorrer data extraida de excel
     foreach ($array[0] as $row) {
+      // Si no existe codigo continua a sigueinte iteracion para evitar generar registro vacio
+      if (!$row[0]) continue;
       // Verificar si ya existe el registro en el array unique
-      $key = array_search($row[1], array_column($ordered, 'codigo'));
+      $key = array_search($row[0], array_column($ordered, 'codigo'));
 
-      $precio_publico = $row[8] === 'NULL' ? NULL : $row[8];
-      $precio_proveedor = $row[9] === 'NULL' ? NULL : $row[9];
-      $precio_descuento = $row[10] === 'NULL' ? NULL : $row[10];
-      $num_name = strtolower($row[4]);
-      $color = strtolower($row[3]);
+      $precio_publico = $row[7] === 'NULL' ? NULL : $row[7];
+      $precio_proveedor = $row[8] === 'NULL' ? NULL : $row[8];
+      $precio_descuento = $row[9] === 'NULL' ? NULL : $row[9];
+      $num_name = mb_strtolower($row[3], 'UTF-8');
+      $color = mb_strtolower($row[2], 'UTF-8');
 
       $numeracion = [
         'name' => $num_name,
@@ -340,13 +361,13 @@ class ProductController extends Controller
       } else {
         // Agregar nuevo product
         array_push($ordered, [
-          'codigo' => $row[1],
-          'modelo' => $row[2],
+          'codigo' => $row[0],
+          'modelo' => $row[1],
           'colores' => [$color],
-          'material' => $row[5],
-          'tipo' => $row[6],
-          'imagen' => $row[7],
-          'categoria' => $row[11],
+          'material' => $row[4],
+          'tipo' => $row[5],
+          'imagen' => $row[6],
+          'categoria' => $row[10],
           'numeraciones' => [$numeracion]
         ]);
       }

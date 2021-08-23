@@ -40,13 +40,14 @@ Route::group(['middleware' => 'api'], function () {
   Route::get('/products/colores', [ProductController::class, 'getColores']);
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
   Route::get('/products/{category}/types', [ProductController::class, 'getProductTypesByCategory']);
+  Route::post('/products/excel/upload', [ProductController::class, 'uploadExcel']);
   Route::apiResource('products', ProductController::class);
   Route::apiResource('users', UserController::class);
   Route::post('change-password/{user}', [UserController::class, 'changePassword']);
   Route::apiResource('roles', RoleController::class);
 });
 
-Route::post('/products/excel/upload', [ProductController::class, 'uploadExcel']);
+Route::post('/products/excel/tojson', [ProductController::class, 'excelToJSON']);
 
 Route::group(['prefix' => 'client', 'middleware' => 'api'], function () {
   // Route::get('/products/categories', [ProductController::class, 'getCategories']);
