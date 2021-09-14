@@ -321,13 +321,12 @@ class ProductController extends Controller
   public function generateArrayFromExcel($file)
   {
     $array = Excel::toArray(null, $file);
-    // return $array;
     // Sacar unique en base a codigo de zapato $array[1]
     // Separar
     $ordered = [];
     // Recorrer data extraida de excel
     foreach ($array[0] as $row) {
-      // Si no existe codigo continua a sigueinte iteracion para evitar generar registro vacio
+      // Si no existe codigo continua a sigueente iteracion para evitar generar registro vacio
       if (!$row[0]) continue;
       // Verificar si ya existe el registro en el array unique
       $key = array_search($row[0], array_column($ordered, 'codigo'));
@@ -337,6 +336,7 @@ class ProductController extends Controller
       $precio_descuento = $row[9] === 'NULL' ? NULL : $row[9];
       $num_name = mb_strtolower($row[3], 'UTF-8');
       $color = mb_strtolower($row[2], 'UTF-8');
+      $imagen = $row[6];
 
       $numeracion = [
         'name' => $num_name,
@@ -345,11 +345,17 @@ class ProductController extends Controller
         'precio_descuento' => $precio_descuento
       ];
 
+      $color_imagen = [
+        'name' => $color,
+        'imagen' => $imagen
+      ];
+
       if ($key !== false) {
         // Buscar si ya existe el color, sino existe se agrega
-        $colorExists = in_array($color, $ordered[$key]['colores']);
-        if (!$colorExists) {
-          array_push($ordered[$key]['colores'], $color);
+        // $colorExists = in_array($color, $ordered[$key]['colores']);
+        $colorExists = array_search($color, array_column($ordered[$key]['colores'], 'name'));
+        if ($colorExists === false) {
+          array_push($ordered[$key]['colores'], $color_imagen);
         }
 
         $key2 = array_search($num_name, array_column($ordered[$key]['numeraciones'], 'name'));
@@ -363,10 +369,10 @@ class ProductController extends Controller
         array_push($ordered, [
           'codigo' => $row[0],
           'modelo' => $row[1],
-          'colores' => [$color],
+          'colores' => [$color_imagen],
           'material' => $row[4],
           'tipo' => $row[5],
-          'imagen' => $row[6],
+          // 'imagen' => $row[6],
           'categoria' => $row[10],
           'numeraciones' => [$numeracion]
         ]);
