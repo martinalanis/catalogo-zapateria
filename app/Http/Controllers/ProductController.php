@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Color;
 use App\Models\Numeracion;
 use App\Models\Product;
 use Exception;
@@ -151,15 +152,13 @@ class ProductController extends Controller
 
   public function getColores()
   {
-    $colores = Product::distinct()
-      ->orderBy('colores')
-      ->get('colores');
+    $colores = Color::distinct()
+      ->orderBy('name')
+      ->get('name');
     $list = [];
     foreach ($colores as $color) {
-      foreach ($color->colores as $c) {
-        if (!in_array($c, $list)) {
-          array_push($list, $c);
-        }
+      if (!in_array($color->name, $list)) {
+        array_push($list, $color->name);
       }
     }
     return response()->json($list);
@@ -270,13 +269,20 @@ class ProductController extends Controller
       foreach ($ordered as $row) {
         $product = new Product($row);
         $numeraciones = [];
+        $colores = [];
         if (count($row['numeraciones'])) {
           foreach ($row['numeraciones'] as $numeracion) {
             array_push($numeraciones, new Numeracion($numeracion));
           }
         }
+        if (count($row['colores'])) {
+          foreach ($row['colores'] as $color) {
+            array_push($colores, new Color($color));
+          }
+        }
         $product->save();
         if (count($numeraciones)) $product->numeraciones()->saveMany($numeraciones);
+        if (count($colores)) $product->colores()->saveMany($colores);
       }
       DB::commit();
     } catch (\Throwable $th) {
