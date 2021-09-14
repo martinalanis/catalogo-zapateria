@@ -3,17 +3,17 @@
 namespace Database\Factories;
 
 use App\Models\Product;
-use App\Models\Numeraciones;
+use App\Models\Numeracion;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class NumeracionesFactory extends Factory
+class NumeracionFactory extends Factory
 {
   /**
    * The name of the factory's corresponding model.
    *
    * @var string
    */
-  protected $model = Numeraciones::class;
+  protected $model = Numeracion::class;
 
   /**
    * Define the model's default state.

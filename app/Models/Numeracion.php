@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Numeraciones extends Model
+class Numeracion extends Model
 {
   use HasFactory;
+
+  protected $table = 'numeraciones';
 
   protected $fillable = [
     'product_id',

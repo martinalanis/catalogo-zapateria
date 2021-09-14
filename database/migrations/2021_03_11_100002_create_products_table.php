@@ -17,10 +17,10 @@ class CreateProductsTable extends Migration
       $table->id();
       $table->string('codigo');
       $table->string('modelo');
-      $table->text('colores');
+      // $table->text('colores');
       $table->string('material')->nullable();
       $table->string('tipo')->nullable();
-      $table->string('imagen')->nullable();
+      // $table->string('imagen')->nullable();
       $table->string('categoria')->nullable();
       $table->timestamps();
     });

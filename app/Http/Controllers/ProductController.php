@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\ProductsImport;
-use App\Models\Numeraciones;
+use App\Models\Numeracion;
 use App\Models\Product;
 use Exception;
 use Illuminate\Http\Request;
@@ -50,7 +50,7 @@ class ProductController extends Controller
     $numeraciones = [];
     if ($request->numeraciones) {
       foreach ($request->numeraciones as $numeracion) {
-        array_push($numeraciones, new Numeraciones((array)json_decode($numeracion)));
+        array_push($numeraciones, new Numeracion((array)json_decode($numeracion)));
       }
     }
     // return response()->json($numeraciones, 200);
@@ -269,7 +269,7 @@ class ProductController extends Controller
         $numeraciones = [];
         if (count($row['numeraciones'])) {
           foreach ($row['numeraciones'] as $numeracion) {
-            array_push($numeraciones, new Numeraciones($numeracion));
+            array_push($numeraciones, new Numeracion($numeracion));
           }
         }
         $product->save();
@@ -412,13 +412,13 @@ class ProductController extends Controller
   {
     try {
       foreach ($resp['create'] as $item) {
-        $numeracion = new Numeraciones($item);
+        $numeracion = new Numeracion($item);
         $numeracion->product_id = $id;
         $numeracion->save();
       }
 
       foreach ($resp['update'] as $item) {
-        $numeracion = Numeraciones::find($item['id']);
+        $numeracion = Numeracion::find($item['id']);
         $numeracion->fill($item);
         $numeracion->precio_publico = filled($item['precio_publico']) ? $item['precio_publico'] : null;
         $numeracion->precio_proveedor = filled($item['precio_proveedor']) ? $item['precio_proveedor'] : null;
@@ -427,7 +427,7 @@ class ProductController extends Controller
       }
 
       foreach ($resp['delete'] as $item) {
-        $numeracion = Numeraciones::find($item['id']);
+        $numeracion = Numeracion::find($item['id']);
         $numeracion->delete();
       }
     } catch (\Throwable $th) {

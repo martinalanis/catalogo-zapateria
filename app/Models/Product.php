@@ -9,20 +9,15 @@ class Product extends Model
 {
   use HasFactory;
 
-  protected $appends = ['imagen_url'];
-
   protected $fillable = [
     'codigo',
     'modelo',
-    'colores',
     'material',
     'tipo',
-    'imagen',
     'categoria'
   ];
 
   protected $casts = [
-    'colores' => 'array',
     'created_at' => 'datetime:d/m/Y H:i',
     'updated_at' => 'datetime:d/m/Y H:i'
   ];
@@ -31,7 +26,12 @@ class Product extends Model
 
   public function numeraciones()
   {
-    return $this->hasMany(Numeraciones::class);
+    return $this->hasMany(Numeracion::class);
+  }
+
+  public function colores()
+  {
+    return $this->hasMany(Color::class);
   }
 
   /**
@@ -60,14 +60,5 @@ class Product extends Model
   public function setCategoriaAttribute($value)
   {
     $this->attributes['categoria'] = mb_strtolower($value, 'UTF-8');
-  }
-
-  /**
-   * Acessors
-   */
-  public function getImagenUrlAttribute()
-  {
-    // return "https://zapateria.com/img/{$value}";
-    return env('IMAGES_URL') . "/{$this->imagen}";
   }
 }
