@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\ProductsImport;
 use App\Models\Numeracion;
 use App\Models\Product;
 use Exception;
@@ -10,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,7 +25,12 @@ class ProductController extends Controller
     if ($req->search) {
       $products->where('codigo', 'like', "%{$req->search}%");
       $products->orWhere('modelo', 'like', "%{$req->search}%");
-      $products->orWhere('colores', 'like', "%{$req->search}%");
+      $products->orWhereHas('colores', function ($query) use ($req) {
+        $query->where('name', 'like', "%{$req->search}%");
+      });
+      $products->orWhereHas('numeraciones', function ($query) use ($req) {
+        $query->where('name', 'like', "%{$req->search}%");
+      });
       // $products->orWhere('numeracion', 'like', "%{$req->search}%");
     }
     if ($req->orderBy) {

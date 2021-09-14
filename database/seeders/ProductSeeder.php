@@ -17,7 +17,7 @@ class ProductSeeder extends Seeder
     Product::factory()
       ->hasNumeraciones(2)
       ->hasColores(2)
-      ->count(2)
+      ->count(4)
       ->create();
   }
 }

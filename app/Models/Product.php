@@ -22,7 +22,7 @@ class Product extends Model
     'updated_at' => 'datetime:d/m/Y H:i'
   ];
 
-  protected $with = ['numeraciones'];
+  protected $with = ['numeraciones', 'colores'];
 
   public function numeraciones()
   {

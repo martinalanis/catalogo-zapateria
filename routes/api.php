@@ -32,7 +32,8 @@ Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::get('/test', [AuthController::class, 'login']);
 
-Route::group(['middleware' => 'auth:sanctum'], function () {
+// Route::group(['middleware' => 'auth:sanctum'], function () {
+Route::group(['middleware' => 'api'], function () {
   Route::get('/products/categories', [ProductController::class, 'getCategories']);
   Route::get('/products/offers/categories', [ProductController::class, 'getOffersCategories']);
   Route::get('/products/offers/count', [ProductController::class, 'getOffersCount']);
@@ -57,15 +58,6 @@ Route::group(['prefix' => 'client', 'middleware' => 'api'], function () {
   Route::get('/products/{category}/all', [ProductController::class, 'getProductsByCategory']);
   Route::get('/products/{category}/types', [ProductController::class, 'getProductTypesByCategory']);
   Route::get('/products/{product}', [ProductController::class, 'show']);
-  // Route::apiResource('products', ProductController::class);
-  // Route::apiResource('users', UserController::class);
-  // Route::post('change-password/{user}', [UserController::class, 'changePassword']);
-  // Route::apiResource('roles', RoleController::class);
-
-  // Route::group(['prefix' => 'products'], function () {
-  //   Route::get('/{category}/all', [ProductController::class, 'getProductsByCategory']);
-  //   Route::get('/{product}', [ProductController::class, 'show']);
-  // });
 });
 
 Route::fallback(function () {

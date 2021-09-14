@@ -31,4 +31,12 @@ class Numeracion extends Model
   {
     return $this->belongsTo(Product::class);
   }
+
+  /**
+   * Mutations
+   */
+  public function setNameAttribute($value)
+  {
+    $this->attributes['name'] = mb_strtolower($value, 'UTF-8');
+  }
 }
