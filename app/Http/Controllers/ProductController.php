@@ -52,25 +52,37 @@ class ProductController extends Controller
   {
     $product = new Product($request->all());
     $numeraciones = [];
+    $colores = [];
+    if (!$request->numeraciones || !count($request->numeraciones)) {
+      return response()->json(['errors' => 'Debes agregar al menos una numeración'], Response::HTTP_CONFLICT);
+    }
     if ($request->numeraciones) {
       foreach ($request->numeraciones as $numeracion) {
         array_push($numeraciones, new Numeracion((array)json_decode($numeracion)));
       }
     }
-    // return response()->json($numeraciones, 200);
-    if ($request->imageFile) {
-      $name = $request->file('imageFile')->getClientOriginalName();
-      $path = $request->file('imageFile')
+    if ($request->colores) {
+      $images = $request->file('imageFile');
+      for ($i=0; $i < count($request->colores); $i++) {
+        $name = $images[$i]->getClientOriginalName();
+        $path = $images[$i]
         ->storeAs(
           'public',
           $name
         );
-      if ($path) $product->imagen = $name;
+        if ($path) {
+          $color = new Color();
+          $color->name = json_decode($request->colores[$i])->name;
+          $color->imagen = $name;
+          array_push($colores, $color);
+        }
+      }
     }
     DB::beginTransaction();
     try {
       $product->save();
       if (count($numeraciones)) $product->numeraciones()->saveMany($numeraciones);
+      if (count($colores)) $product->colores()->saveMany($colores);
       DB::commit();
     } catch (\Throwable $th) {
       DB::rollback();
@@ -143,7 +155,9 @@ class ProductController extends Controller
    */
   public function destroy(Product $product)
   {
-    Storage::disk('public')->delete($product->imagen);
+    foreach ($product->colores as $color) {
+      Storage::disk('public')->delete($color->imagen);
+    }
     return $product->delete()
       ? response()->json($this->messages['delete.success'], 200)
       : response()->json($this->messages['delete.fail'], Response::HTTP_CONFLICT);
