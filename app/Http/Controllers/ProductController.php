@@ -52,7 +52,7 @@ class ProductController extends Controller
   {
     $product = new Product($request->all());
     $numeraciones = [];
-    $colores = [];
+    $coloresArray = [];
     if (!$request->numeraciones || !count($request->numeraciones)) {
       return response()->json(['errors' => 'Debes agregar al menos una numeración'], Response::HTTP_CONFLICT);
     }
@@ -61,20 +61,22 @@ class ProductController extends Controller
         array_push($numeraciones, new Numeracion((array)json_decode($numeracion)));
       }
     }
-    if ($request->colores) {
-      $images = $request->file('imageFile');
-      for ($i=0; $i < count($request->colores); $i++) {
-        $name = $images[$i]->getClientOriginalName();
-        $path = $images[$i]
+    $colores = $request->colores;
+    if ($colores) {
+      for ($i=0; $i < count($colores); $i++) {
+        // if ($i === 2) break;
+        $file = $request->file("colores")[$i]['file'];
+        $name = $file->getClientOriginalName();
+        $path = $file
         ->storeAs(
           'public',
           $name
         );
         if ($path) {
           $color = new Color();
-          $color->name = json_decode($request->colores[$i])->name;
+          $color->name = $colores[$i]['name'];
           $color->imagen = $name;
-          array_push($colores, $color);
+          array_push($coloresArray, $color);
         }
       }
     }
@@ -82,7 +84,7 @@ class ProductController extends Controller
     try {
       $product->save();
       if (count($numeraciones)) $product->numeraciones()->saveMany($numeraciones);
-      if (count($colores)) $product->colores()->saveMany($colores);
+      if (count($colores)) $product->colores()->saveMany($coloresArray);
       DB::commit();
     } catch (\Throwable $th) {
       DB::rollback();
