@@ -435,7 +435,6 @@ class ProductController extends Controller
 
   public function getCrudColores($oldData, $request)
   {
-
     $newData = $request->colores;
 
     $oldIds = Arr::pluck($oldData, 'id');
@@ -456,6 +455,19 @@ class ProductController extends Controller
         return isset($model['id']) && !is_null($model['id']) && in_array($model['id'], $oldIds);
       });
 
+    // $updateArr = [];
+    // for ($i = 0; $i < count($newData); $i++) {
+    //   if (isset($newData['id']) && !is_null($newData['id']) && in_array($newData['id'], $oldIds)) {
+    //     $file = $request->file("colores")[$i]['file'];
+    //     array_push($updateArr, [
+    //       'id' => $newData[$i]['id'],
+    //       'name' => $newData[$i]['name'],
+    //       'file'  => $file
+    //     ]);
+    //   }
+    // }
+    // $update = collect($updateArr);
+
     $createArr = [];
     for ($i = 0; $i < count($newData); $i++) {
       if (!isset($newData[$i]['id']) || is_null($newData[$i]['id'])) {
@@ -466,19 +478,7 @@ class ProductController extends Controller
         ]);
       }
     }
-
     $create = collect($createArr);
-      // ->map(function ($color) {
-      //   if (!isset($model['id']) || is_null($model['id'])) {
-      //     return [
-      //       'id' => $color->id
-      //     ];
-      //   }
-      //   return $color;
-      // })
-      // ->filter(function ($model) {
-      //   return !isset($model['id']) || is_null($model['id']);
-      // });
 
     return compact('delete', 'update', 'create');
   }
@@ -514,9 +514,8 @@ class ProductController extends Controller
   {
     try {
 
-      $coloresCreate = $resp['create'];
-      for ($i = 0; $i < count($coloresCreate); $i++) {
-        $file = $coloresCreate[$i]['file'];
+      foreach ($resp['create'] as $item) {
+        $file = $item['file'];
         $name = $file->getClientOriginalName();
         $path = $file
           ->storeAs(
@@ -526,20 +525,30 @@ class ProductController extends Controller
         if ($path) {
           $color = new Color();
           $color->product_id = $id;
-          $color->name = $coloresCreate[$i]['name'];
+          $color->name = $item['name'];
           $color->imagen = $name;
           $color->save();
         }
       }
 
-      // foreach ($resp['update'] as $item) {
-      //   $numeracion = Numeracion::find($item['id']);
-      //   $numeracion->fill($item);
-      //   $numeracion->precio_publico = filled($item['precio_publico']) ? $item['precio_publico'] : null;
-      //   $numeracion->precio_proveedor = filled($item['precio_proveedor']) ? $item['precio_proveedor'] : null;
-      //   $numeracion->precio_descuento = filled($item['precio_descuento']) ? $item['precio_descuento'] : null;
-      //   $numeracion->save();
-      // }
+      foreach ($resp['update'] as $item) {
+        $color = Color::find($item['id']);
+        $file = !empty($item['file']) ? $item['file'] : null;
+        $color->name = $item['name'];
+        if ($file) {
+          $name = $file->getClientOriginalName();
+          $path = $file
+          ->storeAs(
+            'public',
+            $name
+          );
+          if ($path) {
+            Storage::disk('public')->delete($color->imagen);
+            $color->imagen = $name;
+          }
+        }
+        $color->save();
+      }
 
       foreach ($resp['delete'] as $item) {
         $color = Color::find($item['id']);
