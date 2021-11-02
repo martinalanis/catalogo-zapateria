@@ -64,7 +64,6 @@ class ProductController extends Controller
     $colores = $request->colores;
     if ($colores) {
       for ($i=0; $i < count($colores); $i++) {
-        // if ($i === 2) break;
         $file = $request->file("colores")[$i]['file'];
         $name = $file->getClientOriginalName();
         $path = $file
@@ -116,28 +115,32 @@ class ProductController extends Controller
     DB::beginTransaction();
     try {
       $product->fill($request->all());
-      if ($request->imageFile) {
-        // Guardamos nueva imagen
-        $name = $request->file('imageFile')->getClientOriginalName();
-        $path = $request->file('imageFile')
-        ->storeAs(
-          'public',
-          $name
-        );
-        // Si se guardo la nueva imagen
-        if ($path) {
-          // Eliminamos imagen anterior
-          Storage::disk('public')->delete($product->imagen);
-          $product->imagen = $name;
-        }
-      }
+      // if ($request->imageFile) {
+      //   // Guardamos nueva imagen
+      //   $name = $request->file('imageFile')->getClientOriginalName();
+      //   $path = $request->file('imageFile')
+      //   ->storeAs(
+      //     'public',
+      //     $name
+      //   );
+      //   // Si se guardo la nueva imagen
+      //   if ($path) {
+      //     // Eliminamos imagen anterior
+      //     Storage::disk('public')->delete($product->imagen);
+      //     $product->imagen = $name;
+      //   }
+      // }
       $numeraciones = [];
       foreach ($request->numeraciones as $numeracion) {
         $arr = (array)json_decode($numeracion);
         array_push($numeraciones, $arr);
       }
-      $resp = $this->getCrudNumeraciones($product->numeraciones, $numeraciones);
-      $this->executeCrudNumeraciones($resp, $product->id);
+      $dataNumeraciones = $this->getCrudNumeraciones($product->numeraciones, $numeraciones);
+      $dataColores = $this->getCrudColores($product->colores, $request);
+      // return response()->json($dataColores, 400);
+      $this->executeCrudNumeraciones($dataNumeraciones, $product->id);
+      $this->executeCrudColores($dataColores, $product->id);
+
       DB::commit();
       return $product->save()
         ? response()->json($this->messages['update.success'], 200)
@@ -412,12 +415,11 @@ class ProductController extends Controller
     $oldIds = Arr::pluck($oldData, 'id');
     $newIds = array_filter(Arr::pluck($newData, 'id'), 'is_numeric');
 
-    // groups
     $delete = collect($oldData)
       ->filter(function ($model) use ($newIds) {
         return !in_array($model->id, $newIds);
       });
-    // return $delete;
+
     $update = collect($newData)
       ->filter(function ($model) use ($oldIds) {
         return isset($model['id']) && !is_null($model['id']) && in_array($model['id'], $oldIds);
@@ -426,9 +428,57 @@ class ProductController extends Controller
     $create = collect($newData)
       ->filter(function ($model) {
         return !isset($model['id']) || is_null($model['id']);
-        // return !property_exists($model, 'id');
       });
 
+    return compact('delete', 'update', 'create');
+  }
+
+  public function getCrudColores($oldData, $request)
+  {
+
+    $newData = $request->colores;
+
+    $oldIds = Arr::pluck($oldData, 'id');
+    $newIds = array_filter(Arr::pluck($newData, 'id'), 'is_numeric');
+
+    $delete = collect($oldData)
+      ->filter(function ($model) use ($newIds) {
+        return !in_array($model->id, $newIds);
+      })
+      ->map(function ($color) {
+        return [
+          'id' => $color->id
+        ];
+      });
+
+    $update = collect($newData)
+      ->filter(function ($model) use ($oldIds) {
+        return isset($model['id']) && !is_null($model['id']) && in_array($model['id'], $oldIds);
+      });
+
+    $createArr = [];
+    for ($i = 0; $i < count($newData); $i++) {
+      if (!isset($newData[$i]['id']) || is_null($newData[$i]['id'])) {
+        $file = $request->file("colores")[$i]['file'];
+        array_push($createArr, [
+          'name' => $newData[$i]['name'],
+          'file'  => $file
+        ]);
+      }
+    }
+
+    $create = collect($createArr);
+      // ->map(function ($color) {
+      //   if (!isset($model['id']) || is_null($model['id'])) {
+      //     return [
+      //       'id' => $color->id
+      //     ];
+      //   }
+      //   return $color;
+      // })
+      // ->filter(function ($model) {
+      //   return !isset($model['id']) || is_null($model['id']);
+      // });
 
     return compact('delete', 'update', 'create');
   }
@@ -454,6 +504,47 @@ class ProductController extends Controller
       foreach ($resp['delete'] as $item) {
         $numeracion = Numeracion::find($item['id']);
         $numeracion->delete();
+      }
+    } catch (\Throwable $th) {
+      throw $th;
+    }
+  }
+
+  public function executeCrudColores($resp, $id)
+  {
+    try {
+
+      $coloresCreate = $resp['create'];
+      for ($i = 0; $i < count($coloresCreate); $i++) {
+        $file = $coloresCreate[$i]['file'];
+        $name = $file->getClientOriginalName();
+        $path = $file
+          ->storeAs(
+            'public',
+            $name
+          );
+        if ($path) {
+          $color = new Color();
+          $color->product_id = $id;
+          $color->name = $coloresCreate[$i]['name'];
+          $color->imagen = $name;
+          $color->save();
+        }
+      }
+
+      // foreach ($resp['update'] as $item) {
+      //   $numeracion = Numeracion::find($item['id']);
+      //   $numeracion->fill($item);
+      //   $numeracion->precio_publico = filled($item['precio_publico']) ? $item['precio_publico'] : null;
+      //   $numeracion->precio_proveedor = filled($item['precio_proveedor']) ? $item['precio_proveedor'] : null;
+      //   $numeracion->precio_descuento = filled($item['precio_descuento']) ? $item['precio_descuento'] : null;
+      //   $numeracion->save();
+      // }
+
+      foreach ($resp['delete'] as $item) {
+        $color = Color::find($item['id']);
+        Storage::disk('public')->delete($color->imagen);
+        $color->delete();
       }
     } catch (\Throwable $th) {
       throw $th;
