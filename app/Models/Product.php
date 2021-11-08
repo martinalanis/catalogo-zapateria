@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,13 +15,14 @@ class Product extends Model
     'modelo',
     'material',
     'tipo',
-    'categoria'
+    'categoria',
+    'created_at'
   ];
 
-  protected $casts = [
-    'created_at' => 'datetime:d/m/Y H:i',
-    'updated_at' => 'datetime:d/m/Y H:i'
-  ];
+  // protected $casts = [
+  //   'created_at' => 'datetime:d/m/Y H:i',
+  //   'updated_at' => 'datetime:d/m/Y H:i'
+  // ];
 
   protected $with = ['numeraciones', 'colores'];
 
@@ -61,4 +63,15 @@ class Product extends Model
   {
     $this->attributes['categoria'] = mb_strtolower($value, 'UTF-8');
   }
+
+  public function getCreatedAtAttribute($value)
+  {
+    return Carbon::parse($value)->setTimezone('America/Mexico_City')->toDateTimeString('minute');
+  }
+
+  public function getUpdatedAtAttribute($value)
+  {
+    return Carbon::parse($value)->setTimezone('America/Mexico_City')->toDateTimeString('minute');
+  }
+
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Color;
 use App\Models\Numeracion;
 use App\Models\Product;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -39,6 +40,7 @@ class ProductController extends Controller
         ? $products->orderBy($req->orderBy, 'DESC')
         : $products->orderBy($req->orderBy);
     }
+    // $products->orderBy('created_at');
     return response()->json($products->paginate($req->limit ? $req->limit : 10));
   }
 
@@ -314,14 +316,23 @@ class ProductController extends Controller
   public function deleteAllProducts($reorder = false)
   {
     try {
-      $prods = Product::all();
-      foreach ($prods as $prod) {
-        if (!$prod->delete()) return false;
-      }
-      if ($reorder) {
-        DB::statement('ALTER TABLE numeraciones AUTO_INCREMENT = 1');
-        DB::statement('ALTER TABLE products AUTO_INCREMENT = 1');
-      }
+      // $prods = Product::all();
+      // foreach ($prods as $prod) {
+      //   if (!$prod->delete()) return false;
+      // }
+      // if ($reorder) {
+      //   DB::statement('ALTER TABLE numeraciones AUTO_INCREMENT = 1');
+      //   DB::statement('ALTER TABLE products AUTO_INCREMENT = 1');
+      // }
+      // DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+      // DB::statement('TRUNCATE colores');
+      // DB::statement('TRUNCATE numeraciones');
+      // DB::statement('TRUNCATE products');
+      // DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+      DB::statement('DELETE from products');
+      DB::statement('ALTER TABLE numeraciones AUTO_INCREMENT = 1');
+      DB::statement('ALTER TABLE colores AUTO_INCREMENT = 1');
+      DB::statement('ALTER TABLE products AUTO_INCREMENT = 1');
       return true;
     } catch (\Throwable $th) {
       throw $th;
@@ -362,6 +373,7 @@ class ProductController extends Controller
       $precio_publico = $row[7] === 'NULL' ? NULL : $row[7];
       $precio_proveedor = $row[8] === 'NULL' ? NULL : $row[8];
       $precio_descuento = $row[9] === 'NULL' ? NULL : $row[9];
+      $created_at = empty($row[11]) ? Carbon::createFromFormat('Y-m-d H:i:s', '2021-09-01 0:00:00') : $row[11];
       $num_name = mb_strtolower($row[3], 'UTF-8');
       $color = mb_strtolower($row[2], 'UTF-8');
       $imagen = $row[6];
@@ -402,6 +414,7 @@ class ProductController extends Controller
           'tipo' => $row[5],
           // 'imagen' => $row[6],
           'categoria' => $row[10],
+          'created_at' => $created_at,
           'numeraciones' => [$numeracion]
         ]);
       }
@@ -454,19 +467,6 @@ class ProductController extends Controller
       ->filter(function ($model) use ($oldIds) {
         return isset($model['id']) && !is_null($model['id']) && in_array($model['id'], $oldIds);
       });
-
-    // $updateArr = [];
-    // for ($i = 0; $i < count($newData); $i++) {
-    //   if (isset($newData['id']) && !is_null($newData['id']) && in_array($newData['id'], $oldIds)) {
-    //     $file = $request->file("colores")[$i]['file'];
-    //     array_push($updateArr, [
-    //       'id' => $newData[$i]['id'],
-    //       'name' => $newData[$i]['name'],
-    //       'file'  => $file
-    //     ]);
-    //   }
-    // }
-    // $update = collect($updateArr);
 
     $createArr = [];
     for ($i = 0; $i < count($newData); $i++) {
