@@ -211,6 +211,7 @@ class ProductController extends Controller
     }
 
     $response = Product::where($where)
+      ->latest()
       ->paginate($req->limit ? $req->limit : 10);
     if (!count($response->items())) {
       return response()->json(['data' => 'Sin resultados'], 404);
@@ -253,7 +254,7 @@ class ProductController extends Controller
     if ($req->category) {
       $query->where('categoria', $req->category);
     }
-    $offers = $query->paginate($req->limit ? $req->limit : 10);
+    $offers = $query->latest()->paginate($req->limit ? $req->limit : 10);
     if (!count($offers->items())) {
       return response()->json(['data' => 'Sin resultados'], 404);
     }
