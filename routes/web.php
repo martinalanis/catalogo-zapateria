@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -30,3 +31,5 @@ Route::get('/', function () {
 Route::get('storage-link', function(){
   return Artisan::call('storage:link');
 });
+
+Route::get('export', [ProductController::class, 'exportData']);

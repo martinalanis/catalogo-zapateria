@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductsExport;
 use App\Models\Color;
 use App\Models\Numeracion;
 use App\Models\Product;
@@ -269,6 +270,35 @@ class ProductController extends Controller
     return response()->json($count);
   }
 
+  public function exportData()
+  {
+    $products = Product::all();
+    $data = [];
+
+    foreach ($products as $product) {
+      foreach ($product->numeraciones as $numeracion) {
+        foreach ($product->colores as $color) {
+          $arr = [];
+          array_push($arr, $product->codigo);
+          array_push($arr, $product->modelo);
+          array_push($arr, $color->name);
+          array_push($arr, $numeracion->name);
+          array_push($arr, $product->material);
+          array_push($arr, $product->tipo);
+          array_push($arr, $color->imagen);
+          array_push($arr, $numeracion->precio_publico);
+          array_push($arr, $numeracion->precio_proveedor);
+          array_push($arr, $numeracion->precio_descuento);
+          array_push($arr, $product->categoria);
+          array_push($arr, $product->created_at);
+          array_push($data, $arr);
+        }
+      }
+    }
+    $export = new ProductsExport($data);
+    return Excel::download($export, 'products.xlsx');
+  }
+
   public function uploadExcel (Request $request)
   {
     $this->validate($request, [
@@ -369,7 +399,8 @@ class ProductController extends Controller
       // Si no existe codigo continua a sigueente iteracion para evitar generar registro vacio
       if (!$row[0]) continue;
       // Verificar si ya existe el registro en el array unique
-      $key = array_search($row[0], array_column($ordered, 'codigo'));
+      $codigo = mb_strtolower($row[0], 'UTF-8');
+      $key = array_search($codigo, array_column($ordered, 'codigo'));
 
       $precio_publico = $row[7] === 'NULL' ? NULL : $row[7];
       $precio_proveedor = $row[8] === 'NULL' ? NULL : $row[8];
@@ -408,7 +439,7 @@ class ProductController extends Controller
       } else {
         // Agregar nuevo product
         array_push($ordered, [
-          'codigo' => $row[0],
+          'codigo' => $codigo,
           'modelo' => $row[1],
           'colores' => [$color_imagen],
           'material' => $row[4],
