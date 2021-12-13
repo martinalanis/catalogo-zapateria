@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
@@ -49,6 +50,7 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
   Route::apiResource('users', UserController::class);
   Route::post('change-password/{user}', [UserController::class, 'changePassword']);
   Route::apiResource('roles', RoleController::class);
+  Route::get('/dashboard/stats', [DashboardController::class, 'index']);
 });
 
 Route::post('/products/excel/tojson', [ProductController::class, 'excelToJSON']);
